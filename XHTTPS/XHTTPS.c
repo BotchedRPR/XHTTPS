@@ -75,22 +75,6 @@ XHTTPS_Error XHTTPS_Add_RSA_TA(const unsigned char* dn, size_t dn_len,
 	return XHTTPS_OK;
 }
 
-// Converts hex string to size_t (todo: check for more efficient method)
-size_t XHTTPS_Hex_To_Size(const char *hex, size_t max_len) 
-{
-	size_t val = 0;
-	size_t i = 0;
-	while (i < max_len && hex[i]) {
-		char c = hex[i++];
-		if (c >= '0' && c <= '9') val = (val << 4) + (c - '0');
-		else if (c >= 'A' && c <= 'F') val = (val << 4) + (c - 'A' + 10);
-		else if (c >= 'a' && c <= 'f') val = (val << 4) + (c - 'a' + 10);
-		else break;
-	}
-
-	return val;
-}
-
 size_t XHTTPS_Get_Message_Offset(char *response)
 {
 	char* msg_start = strstr(response, "\r\n\r\n");
