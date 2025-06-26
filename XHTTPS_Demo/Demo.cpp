@@ -94,5 +94,6 @@ void _cdecl main()
 
 out:
 	XHTTPS_Exit();
+	free(resp);
 	return;
 }
