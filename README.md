@@ -21,16 +21,36 @@ TODO: Write more tutorials
 XboxTLS (and, as such XHTTPS) requires to provide TAs for the domains you wish to load in your client application.
 This is easily accomplished using the BearSSL `brssl` command. First of all, download the certificates (using OpenSSL, or your favorite web browser. 
 For example, on Firefox:
-<dummy>
-Click the More information button
-<dummy>
-Click the View Certificate button
-<dummy>
-Switch to the Website certificate (in this case google.com)
-<dummy>
-Download the certificate, then click the Root Certificate (in this case GTS Root R4) in the top bar and also download it
 
-On a Linux system (or WSL)
+
+### Step 1: Open Certificate Details
+![Step 1](https://github.com/user-attachments/assets/38241404-2e2a-4223-86ba-c6977c247451)
+
+- Click the **More information** button.
+
+---
+
+### Step 2: View the Certificate
+![Step 2](https://github.com/user-attachments/assets/a6c1b426-c88a-40e7-ab3c-6e3d6b0150d4)
+
+- Click the **View Certificate** button.
+
+---
+
+### Step 3: Select the Website Certificate
+![Step 3](https://github.com/user-attachments/assets/51457553-5b3e-47da-92b2-1a65b17d3937)
+
+- Switch to the **Website certificate** tab (e.g., `google.com`).
+
+---
+
+### Step 4: Download Certificates
+![Step 4](https://github.com/user-attachments/assets/5ae30533-2928-4936-8bd5-783a3e34b644)
+
+- Click **Download** to save the website certificate.
+- Then, click the **Root Certificate** in the top bar (e.g., `GTS Root R4`) and download it as well.
+
+Now let's convert all of these certificates to a BearSSL-compatible array. On a Linux system (or WSL)
 ```bash
 [igor@DESKTOP-IAGBS4H ~]$ brssl ta /mnt/c/Users/bochen/Downloads/www-google-com.pem /mnt/c/Users/bochen/Downloads/www-google-com\(1\).pem
 Reading file '/mnt/c/Users/bochen/Downloads/www-google-com.pem': 1 trust anchor
