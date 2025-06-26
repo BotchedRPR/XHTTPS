@@ -407,3 +407,14 @@ FodyWeavers.xsd
 
 # XboxTLS - external library (submodule?)
 XboxTLS/
+
+# Xbox 360 SDK - build outputs
+*.xex
+*.exe
+*.lib
+*.xdb
+
+# Xbox 360 SDK - Logging
+*.lastbuildstate
+*.unsuccessfulbuild
+
