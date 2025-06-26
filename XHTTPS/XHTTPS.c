@@ -12,6 +12,7 @@
 */
 
 #include <xtl.h>
+
 #include "XHTTPS.h"
 #include "..\XboxTLS\XboxTLS.h"
 
@@ -92,7 +93,9 @@ size_t XHTTPS_Hex_To_Size(const char *hex, size_t max_len)
 
 size_t XHTTPS_Get_Message_Offset(char *response)
 {
-	return abs(response - strstr(response, "\r\n\r\n")) + 3;
+	char* msg_start = strstr(response, "\r\n\r\n");
+	if (!msg_start) return 0;
+	return (msg_start - response) + 4;
 }
 
 int XHTTPS_Get_Next_Chunk_Size(char* chunkData, size_t *chunkLen)
@@ -210,14 +213,13 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 	 */
 	for (size_t i = 0; i < resp->num_headers; i++)
 	{
-		if (strncmp(resp->headers[i].name, "Transfer-Encoding", resp->headers[i].name_len))
+		if (strncmp(resp->headers[i].name, "Transfer-Encoding", resp->headers[i].name_len) == 0)
 		{
-			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len))
+			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
 			{
 				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
 				dechunked = XHTTPS_Dechunk(out + XHTTPS_Get_Message_Offset(out), outSize);
 				out = dechunked;
-				free(dechunked);
 
 				break;
 			}
@@ -260,11 +262,11 @@ XHTTPS_Error XHTTPS_Setup(void)
 
 	UserAgent = (char*)malloc(sizeof(char) * XHTTPS_USER_AGENT_SIZE);
 
-	// Default UserAgent, can be replaced with XHTTPS_SetUserAgent
-	UserAgent = "Xbox360/1.0";
-
 	if (UserAgent == NULL)
 		return XHTTPS_USER_AGENT_MALLOC_FAILED;
+
+	// Default UserAgent, can be replaced with XHTTPS_SetUserAgent
+	strncpy(UserAgent, "Xbox360/1.0", XHTTPS_USER_AGENT_SIZE);
 
 	if (!XboxTLS_CreateContext(int_ctx, "dummy"))
 		return XHTTPS_CONTEXT_CREATION_FAILED;
