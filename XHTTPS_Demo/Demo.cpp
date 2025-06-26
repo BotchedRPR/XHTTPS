@@ -63,7 +63,7 @@ const unsigned char RSA_E[] = { 0x01, 0x00, 0x01 };  // 65537
 void _cdecl main()
 {
 	int ret_xhttps;
-	char output[OUTPUT_BUFFER_SIZE] = { '\0' };
+	char *output = (char*)malloc(OUTPUT_BUFFER_SIZE);
 	XHTTPS_Response *resp = (XHTTPS_Response*)malloc(sizeof(XHTTPS_Response));
 
 	ret_xhttps = XHTTPS_Setup();
@@ -86,7 +86,7 @@ void _cdecl main()
 	// This is optional
 	XHTTPS_SetUserAgent("Xenon/2.0.17559.0");
 
-	ret_xhttps = XHTTPS_GET("consolemods.org", "/wiki/Main_Page", output, OUTPUT_BUFFER_SIZE, resp);
+	ret_xhttps = XHTTPS_GET("consolemods.org", "/wiki/Main_Page", &output, OUTPUT_BUFFER_SIZE, resp);
 	if (ret_xhttps != XHTTPS_OK)
 		printf("xhttps[3] returned: %i\n", ret_xhttps);
 

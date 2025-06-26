@@ -47,7 +47,7 @@ XHTTPS_Error XHTTPS_Add_EC_TA(const unsigned char* dn, size_t dn_len,
 XHTTPS_Error XHTTPS_Add_RSA_TA(const unsigned char* dn, size_t dn_len,
 			       const unsigned char* n, size_t n_len,
 			       const unsigned char* e, size_t e_len);
-XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
+XHTTPS_Error XHTTPS_GET(char* host, char* path, char** out, long outSize,
 			XHTTPS_Response* resp);
 void XHTTPS_SetUserAgent(char* userAgent);
 void XHTTPS_Exit(void);

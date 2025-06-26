@@ -140,7 +140,7 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	return dechunked;
 }
 
-XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
+XHTTPS_Error XHTTPS_GET(char* host, char* path, char** out, long outSize,
 	XHTTPS_Response* resp)
 {
 	char ip[64] = { 0 };
@@ -181,7 +181,7 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 	// See comment in XHTTPS.h about header numbers
 	resp->num_headers = 100;
 
-	r = phr_parse_response(out, outSize, &resp->minor_version, &resp->status, &resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
+	r = phr_parse_response(*out, outSize, &resp->minor_version, &resp->status, &resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
 
 	if (r > 0)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
@@ -202,8 +202,8 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
 			{
 				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
-				dechunked = XHTTPS_Dechunk(out + XHTTPS_Get_Message_Offset(out), outSize);
-				out = dechunked;
+				dechunked = XHTTPS_Dechunk(*out + XHTTPS_Get_Message_Offset(*out), outSize);
+				*out = dechunked;
 
 				break;
 			}
@@ -262,8 +262,11 @@ XHTTPS_Error XHTTPS_Setup(void)
 
 void XHTTPS_Exit(void)
 {
-	if(int_ctx != nullptr)
+	if (int_ctx != nullptr)
 		XboxTLS_Free(int_ctx);
+
+	if (UserAgent != NULL)
+		free(UserAgent);
 
 	WSACleanup();
 }
