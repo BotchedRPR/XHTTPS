@@ -111,6 +111,8 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 			return NULL;
 		}
 
+		printf("CHUNK: Size 0x%x\n", chunkSize);
+
 		if (chunkSize == 0)
 			break; // end of chunks
 
@@ -140,26 +142,40 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	return dechunked;
 }
 
-XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
-	XHTTPS_Response* resp)
+XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 {
 	char ip[64] = { 0 };
 	char request[512];
 	char* dechunked;
 	int r;
 	int bufLen = 0; // input variable for for loop
-
 	XHTTPS_Error err;
+	XHTTPS_Response* resp = (XHTTPS_Response*)malloc(sizeof(XHTTPS_Response));
+
+	if (!resp)
+		return nullptr;
+
+	resp->engine_err = XHTTPS_OK;
+	resp->msg_len = XHTTPS_OUTPUT_BUFFER_SIZE;
+	resp->msg = (char*)malloc(resp->msg_len);
+
+	if (!resp->msg)
+	{
+		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_MESSAGE_MALLOC_FAILED);
+	}
 
 	// Resolve DNS
 	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
 	if(err != XHTTPS_OK)
-		return err;
+	{
+		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_FAILED_DNS_RESOLUTION);
+	}
 
 	// Connect to host
-	if (!XboxTLS_Connect(int_ctx, ip, host, 443)) {
+	if (!XboxTLS_Connect(int_ctx, ip, host, 443)) 
+	{
 		XboxTLS_Free(int_ctx);
-		return XHTTPS_CONNECT_TO_HOST_FAILED;
+		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_CONNECT_TO_HOST_FAILED);
 	}
 
 	XHTTPS_Debug("Connected to host!\n");
@@ -173,20 +189,22 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 	XboxTLS_Write(int_ctx, request, (int)strlen(request));
 
 	// Read the response from the socket
-	while ((r = XboxTLS_Read(int_ctx, out + bufLen, outSize - bufLen - 1)) > 0) {
+	while ((r = XboxTLS_Read(int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
 		bufLen += r;
-		out[bufLen] = '\0';
+		resp->msg[bufLen] = '\0';
 	}
 
 	// See comment in XHTTPS.h about header numbers
 	resp->num_headers = 100;
 
-	r = phr_parse_response(out, outSize, &resp->minor_version, &resp->status, &resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
+	r = phr_parse_response(resp->msg, resp->msg_len, &resp->minor_version, &resp->status, (const char**)&resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
 
 	if (r > 0)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
 	else
-		return XHTTPS_INVALID_HTTP_RESPONSE;
+	{
+		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
+	}
 
 	/*
 	 * Now we need to check Transfer-Encoding. Mainly because
@@ -202,8 +220,8 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
 			{
 				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
-				dechunked = XHTTPS_Dechunk(out + XHTTPS_Get_Message_Offset(out), outSize);
-				out = dechunked;
+				dechunked = XHTTPS_Dechunk(resp->msg + XHTTPS_Get_Message_Offset(resp->msg), resp->msg_len);
+				resp->msg = dechunked;
 
 				break;
 			}
@@ -212,7 +230,7 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char* out, long outSize,
 		}
 	}
 
-	return XHTTPS_OK;
+	return resp;
 }
 
 void XHTTPS_SetUserAgent(char* userAgent)
