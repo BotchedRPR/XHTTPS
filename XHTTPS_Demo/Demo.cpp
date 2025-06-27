@@ -2,6 +2,7 @@
 // XHTTPS demo app
 
 #include <cstdlib>
+#include <iostream>
 #include <stdio.h>
 #include "..\XHTTPS\XHTTPS.h"
 
@@ -58,13 +59,11 @@ const unsigned char RSA_N[] = {
 };
 const unsigned char RSA_E[] = { 0x01, 0x00, 0x01 };  // 65537
 
-#define OUTPUT_BUFFER_SIZE 128 * 1024
-
 void _cdecl main()
 {
 	int ret_xhttps;
-	char output[OUTPUT_BUFFER_SIZE] = { '\0' };
-	XHTTPS_Response *resp = (XHTTPS_Response*)malloc(sizeof(XHTTPS_Response));
+	char* output = (char*)malloc(XHTTPS_OUTPUT_BUFFER_SIZE);
+	XHTTPS_Response *resp;
 
 	ret_xhttps = XHTTPS_Setup();
 
@@ -86,11 +85,18 @@ void _cdecl main()
 	// This is optional
 	XHTTPS_SetUserAgent("Xenon/2.0.17559.0");
 
-	ret_xhttps = XHTTPS_GET("consolemods.org", "/wiki/Main_Page", output, OUTPUT_BUFFER_SIZE, resp);
-	if (ret_xhttps != XHTTPS_OK)
-		printf("xhttps[3] returned: %i\n", ret_xhttps);
+	resp = XHTTPS_GET("consolemods.org", "/wiki/Main_Page");
 
-	printf("resp:\nheader count: %i\nmessage length: %i\n", resp->num_headers);
+	if (!resp)
+		goto out;
+
+	if (resp->engine_err != XHTTPS_OK)
+	{
+		printf("XHTTPS Engine error %i\n", resp->engine_err);
+		goto out;
+	}
+
+	std::cout << resp->msg << "\n";
 
 out:
 	XHTTPS_Exit();
