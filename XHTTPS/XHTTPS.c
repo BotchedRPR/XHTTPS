@@ -210,8 +210,6 @@ XHTTPS_Error XHTTPS_GET(char* host, char* path, char** out, long outSize,
 			else
 				break;
 		}
-
-		i++;
 	}
 
 	return XHTTPS_OK;
