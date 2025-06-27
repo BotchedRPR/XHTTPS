@@ -220,7 +220,16 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
 			{
 				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
-				dechunked = XHTTPS_Dechunk(resp->msg + XHTTPS_Get_Message_Offset(resp->msg), resp->msg_len);
+
+				size_t msgOffset = XHTTPS_Get_Message_Offset(resp->msg);
+
+				// We can't trust msg_len to not overrun
+				dechunked = XHTTPS_Dechunk(resp->msg + msgOffset, strlen(resp->msg + msgOffset));
+				if (dechunked == NULL)
+				{
+					XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
+				}
+
 				resp->msg = dechunked;
 
 				break;
