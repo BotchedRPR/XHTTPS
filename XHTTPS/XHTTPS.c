@@ -16,6 +16,15 @@
 #include "XHTTPS.h"
 #include "..\XboxTLS\XboxTLS.h"
 
+/*
+ * TODO:
+ * 
+ * - c++ify, replace mallocs with new
+ * - document all functions
+ * - POST requests
+ * - dynamically add headers in
+ */
+
 // For simplicity's sake we declare an internal context instead of passing it around
 XboxTLSContext* int_ctx;
 static char* UserAgent;
