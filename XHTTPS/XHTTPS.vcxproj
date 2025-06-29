@@ -229,7 +229,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="picohttpparser.c" />
-    <ClCompile Include="XHTTPS.c" />
+    <ClCompile Include="XHTTPS.cpp" />
+    <ClCompile Include="XHTTPS_Roots.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XboxTLS\XboxTLS.vcxproj">

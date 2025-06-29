@@ -25,7 +25,10 @@
     <ClCompile Include="picohttpparser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="XHTTPS.c">
+    <ClCompile Include="XHTTPS_Roots.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XHTTPS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
