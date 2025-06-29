@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 /*
-* XHTTPS - a simple HTTP(S) library for Xbox 360
-* based on XboxTLS (https://github.com/JakobRangel/XboxTLS)
-*
-* This library is released under the MIT license.
-*
-* Thanks and regards go out to:
-*  - Jakob Rangel (https://github.com/JakobRangel) for XboxTLS
-*  - Clément Dreptin (https://github.com/ClementDreptin) for helping bugfix
-*  - Kazuho Oku, Tokuhiro Matsuno, Daisuke Murase, Shigeo Mitsunari for picohttpparser
-*/
+ * XHTTPS - a simple HTTP(S) library for Xbox 360
+ * based on XboxTLS (https://github.com/JakobRangel/XboxTLS)
+ *
+ * This library is released under the MIT license.
+ *
+ * Thanks and regards go out to:
+ *  - Jakob Rangel (https://github.com/JakobRangel) for XboxTLS
+ *  - Clément Dreptin (https://github.com/ClementDreptin) for helping bugfix
+ *  - Kazuho Oku, Tokuhiro Matsuno, Daisuke Murase, Shigeo Mitsunari for picohttpparser
+ */
 
 #include <iostream>
 #include <xtl.h>
