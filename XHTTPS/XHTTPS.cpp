@@ -65,26 +65,6 @@ XHTTPS_Error XHTTPS_ResolveDNS(const char* domain, char* resolvedIP, int ipBuffe
 	return XHTTPS_OK;
 }
 
-XHTTPS_Error XHTTPS_Add_EC_TA(const unsigned char* dn, size_t dn_len,
-	const unsigned char* q, size_t q_len,
-	XboxTLSCurve curve_id)
-{
-	if(!XboxTLS_AddTrustAnchor_EC(int_ctx, dn, dn_len, q, q_len, curve_id))
-		return XHTTPS_FAILED_ADDING_TRUST_ANCHOR;
-
-	return XHTTPS_OK;
-}
-
-XHTTPS_Error XHTTPS_Add_RSA_TA(const unsigned char* dn, size_t dn_len,
-	const unsigned char* n, size_t n_len,
-	const unsigned char* e, size_t e_len)
-{
-	if(!XboxTLS_AddTrustAnchor_RSA(int_ctx, dn, dn_len, n, n_len, e, e_len))
-		return XHTTPS_FAILED_ADDING_TRUST_ANCHOR;
-
-	return XHTTPS_OK;
-}
-
 size_t XHTTPS_Get_Message_Offset(char *response)
 {
 	char* msg_start = strstr(response, "\r\n\r\n");

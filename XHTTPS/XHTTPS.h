@@ -51,12 +51,6 @@ typedef struct XHTTPS_Response {
 
 void XHTTPS_Debug(char* text);
 XHTTPS_Error XHTTPS_Setup(void);
-XHTTPS_Error XHTTPS_Add_EC_TA(const unsigned char* dn, size_t dn_len,
-			      const unsigned char* q, size_t q_len,
-			      XboxTLSCurve curve_id);
-XHTTPS_Error XHTTPS_Add_RSA_TA(const unsigned char* dn, size_t dn_len,
-			       const unsigned char* n, size_t n_len,
-			       const unsigned char* e, size_t e_len);
 XHTTPS_Response* XHTTPS_GET(char* host, char* path);
 void XHTTPS_SetUserAgent(char* userAgent);
 void XHTTPS_Exit(void);
