@@ -173,7 +173,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 
 	if (!resp->msg)
 	{
-		delete resp->msg;
+		free(resp->msg);
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_MESSAGE_MALLOC_FAILED);
 	}
 
@@ -181,14 +181,14 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
 	if(err != XHTTPS_OK)
 	{
-		delete resp->msg;
+		free(resp->msg);
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_FAILED_DNS_RESOLUTION);
 	}
 
 	// Connect to host
 	if (!XboxTLS_Connect(int_ctx, ip, host, 443)) 
 	{
-		delete resp->msg;
+		free(resp->msg);
 		XboxTLS_Free(int_ctx);
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_CONNECT_TO_HOST_FAILED);
 	}
@@ -233,7 +233,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
 	else
 	{
-		delete resp->msg;
+		free(resp->msg);
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
 	}
 
