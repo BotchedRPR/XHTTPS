@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdio.h>
+#include <string>
 #include "..\XHTTPS\XHTTPS.h"
 
 void _cdecl main()
@@ -24,14 +25,16 @@ void _cdecl main()
 
 	if (resp->engine_err != XHTTPS_OK)
 	{
-		printf("XHTTPS Engine error %i\n", resp->engine_err);
+		std::cout << "XHTTPS Engine error " << resp->engine_err << "\n";
 		free(resp);
 		goto out;
 	}
 
 	for (int i = 0; i != resp->num_headers; ++i) {
-		printf("%.*s: %.*s\n", (int)resp->headers[i].name_len, resp->headers[i].name,
-		      (int)resp->headers[i].value_len, resp->headers[i].value);
+		std::cout << std::string(resp->headers[i].name, resp->headers[i].name_len)
+			<< ": "
+			<< std::string(resp->headers[i].value, resp->headers[i].value_len)
+			<< '\n';
 	}
 
 out:
