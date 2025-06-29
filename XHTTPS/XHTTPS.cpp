@@ -169,7 +169,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 
 	resp->engine_err = XHTTPS_OK;
 	resp->msg_len = XHTTPS_OUTPUT_BUFFER_SIZE;
-	resp->msg = new char[resp->msg_len];
+	resp->msg = (char*)malloc(resp->msg_len);
 
 	if (!resp->msg)
 	{
