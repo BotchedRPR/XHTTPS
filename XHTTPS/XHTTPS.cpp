@@ -261,6 +261,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 					XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
 				}
 
+				free(resp->msg);
 				resp->msg = dechunked;
 
 				break;
