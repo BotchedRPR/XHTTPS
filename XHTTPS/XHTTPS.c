@@ -157,7 +157,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 {
 	char ip[64] = { 0 };
 	char request[512];
-	char* dechunked;
+	char *newBuf, *dechunked;
 	int r;
 	int bufLen = 0; // input variable for for loop
 	XHTTPS_Error err;
@@ -203,9 +203,24 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	XboxTLS_Write(int_ctx, request, (int)strlen(request));
 
 	// Read the response from the socket
+	// Here we need to be careful and realloc the buffer every XHTTPS_OUTPUT_BUFFER_SIZE bytes read
 	while ((r = XboxTLS_Read(int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
 		bufLen += r;
-		resp->msg[bufLen] = '\0';
+		
+		// Check capacity of the output buffer
+		if (resp->msg_len - bufLen <= 1)
+		{
+			resp->msg_len += XHTTPS_OUTPUT_BUFFER_SIZE;
+			newBuf = (char*)realloc(resp->msg, resp->msg_len);
+
+			if (!newBuf)
+			{
+				free(resp->msg);
+				XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_OUT_OF_MEMORY);
+			}
+
+			resp->msg = newBuf;
+		}
 	}
 
 	// See comment in XHTTPS.h about header numbers
