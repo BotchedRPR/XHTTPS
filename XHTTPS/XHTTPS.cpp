@@ -300,7 +300,7 @@ XHTTPS_Error XHTTPS_Setup(void)
 	if (int_ctx == NULL)
 		return XHTTPS_CONTEXT_CREATION_FAILED;
 
-	UserAgent = (char*)malloc(sizeof(char) * XHTTPS_USER_AGENT_SIZE);
+	UserAgent = new char[XHTTPS_USER_AGENT_SIZE];
 
 	if (UserAgent == NULL)
 		return XHTTPS_USER_AGENT_MALLOC_FAILED;
@@ -323,6 +323,8 @@ void XHTTPS_Exit(void)
 {
 	if(int_ctx != nullptr)
 		XboxTLS_Free(int_ctx);
+
+	delete[] UserAgent;
 
 	WSACleanup();
 }
