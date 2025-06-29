@@ -15,6 +15,7 @@
 #include <xtl.h>
 
 #include "XHTTPS.h"
+#include "XHTTPS_Roots.h"
 #include "..\XboxTLS\XboxTLS.h"
 
 /*
@@ -309,6 +310,9 @@ XHTTPS_Error XHTTPS_Setup(void)
 
 	if (!XboxTLS_CreateContext(int_ctx, "dummy"))
 		return XHTTPS_CONTEXT_CREATION_FAILED;
+
+	// Add some common root CAs. Don't fail on error.
+	XHTTPS_AddTAs(int_ctx);
 
 	XHTTPS_Debug("XHTTPS ready.\n");
 

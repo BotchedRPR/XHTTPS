@@ -20,6 +20,9 @@
     <ClInclude Include="picohttpparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XHTTPS_Roots.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="picohttpparser.c">

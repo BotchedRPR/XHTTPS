@@ -226,6 +226,7 @@
   <ItemGroup>
     <ClInclude Include="picohttpparser.h" />
     <ClInclude Include="XHTTPS.h" />
+    <ClInclude Include="XHTTPS_Roots.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="picohttpparser.c" />
