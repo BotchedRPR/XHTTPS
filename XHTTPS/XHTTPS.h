@@ -45,10 +45,6 @@ typedef struct XHTTPS_Response {
 	XHTTPS_Error engine_err;
 } XHTTPS_Response;
 
-#define XHTTPS_RETURN_ENGINE_ERROR(err)	\
-		resp->engine_err = err;	\
-		return resp;		\
-
 void XHTTPS_Debug(char* text);
 XHTTPS_Error XHTTPS_Setup(void);
 XHTTPS_Response* XHTTPS_GET(char* host, char* path);

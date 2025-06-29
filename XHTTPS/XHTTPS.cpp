@@ -37,6 +37,15 @@ void XHTTPS_Debug(char* text)
 #endif
 }
 
+static inline XHTTPS_Response* XHTTPS_MakeError(XHTTPS_Error err) 
+{
+    XHTTPS_Response* r = new XHTTPS_Response;
+    r->msg = nullptr;
+    r->body = nullptr;
+    r->engine_err = err;
+    return r;
+}
+
 /**
  * @brief Resolves a domain name to an IPv4 address string.
  * 
@@ -91,15 +100,14 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	size_t readOffset = 0;
 	size_t writeOffset = 0;
 
-	// using malloc() because we will need to realloc later
-	char *dechunked = (char *)malloc(messageLen);
+	char *dechunked = new char[messageLen];
 	if (!dechunked) return NULL;
 
 	while (readOffset < messageLen) {
 		size_t localOffset = 0;
 		int chunkSize = XHTTPS_Get_Next_Chunk_Size(message + readOffset, &localOffset);
 		if (chunkSize < 0) {
-			free(dechunked);
+			delete[] dechunked;
 			return NULL;
 		}
 
@@ -111,7 +119,7 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 		readOffset += localOffset;
 
 		if (readOffset + chunkSize > (size_t)messageLen) {
-			free(dechunked);
+			delete[] dechunked;
 			return NULL; // not enough data
 		}
 
@@ -122,7 +130,7 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 		if (message[readOffset] == '\r' && message[readOffset + 1] == '\n') {
 			readOffset += 2;
 		} else {
-			free(dechunked);
+			delete[] dechunked;
 			return NULL; // malformed chunk
 		}
 
@@ -152,17 +160,14 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	resp->msg = (char*)malloc(resp->msg_len);
 
 	if (!resp->msg)
-	{
-		free(resp->msg);
-		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_MESSAGE_MALLOC_FAILED);
-	}
+		return XHTTPS_MakeError(XHTTPS_MESSAGE_MALLOC_FAILED);
 
 	// Resolve DNS
 	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
 	if(err != XHTTPS_OK)
 	{
 		free(resp->msg);
-		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_FAILED_DNS_RESOLUTION);
+		return XHTTPS_MakeError(XHTTPS_FAILED_DNS_RESOLUTION);
 	}
 
 	// Connect to host
@@ -170,7 +175,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	{
 		free(resp->msg);
 		XboxTLS_Free(int_ctx);
-		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_CONNECT_TO_HOST_FAILED);
+		return XHTTPS_MakeError(XHTTPS_CONNECT_TO_HOST_FAILED);
 	}
 
 	XHTTPS_Debug("Connected to host!\n");
@@ -195,10 +200,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 			newBuf = (char*)realloc(resp->msg, resp->msg_len);
 
 			if (!newBuf)
-			{
-				free(resp->msg);
-				XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_OUT_OF_MEMORY);
-			}
+				return XHTTPS_MakeError(XHTTPS_OUT_OF_MEMORY);
 
 			resp->msg = newBuf;
 		}
@@ -212,10 +214,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	if (r > 0)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
 	else
-	{
-		free(resp->msg);
-		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
-	}
+		return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
 
 	/*
 	 * Now we need to check Transfer-Encoding. Mainly because
@@ -240,11 +239,8 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 				dechunked = XHTTPS_Dechunk(resp->body, strlen(resp->body));
 				if (dechunked == NULL)
 				{
-					XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
+					return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
 				}
-
-				free(resp->msg);
-				resp->msg = dechunked;
 
 				break;
 			}
