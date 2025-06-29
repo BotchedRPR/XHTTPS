@@ -254,8 +254,10 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 
 				size_t msgOffset = XHTTPS_Get_Message_Offset(resp->msg);
 
+				resp->body = resp->msg + msgOffset;
+
 				// We can't trust msg_len to not overrun
-				dechunked = XHTTPS_Dechunk(resp->msg + msgOffset, strlen(resp->msg + msgOffset));
+				dechunked = XHTTPS_Dechunk(resp->body, strlen(resp->body));
 				if (dechunked == NULL)
 				{
 					XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);

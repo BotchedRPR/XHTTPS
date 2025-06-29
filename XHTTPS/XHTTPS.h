@@ -32,6 +32,7 @@ typedef struct XHTTPS_Response {
 	int minor_version;
 	int status;
 	char* msg;
+	char* body;
 	size_t msg_len;
 
 	// Size of 100 recommended by picohttpparser.
