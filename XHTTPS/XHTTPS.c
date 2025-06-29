@@ -11,6 +11,7 @@
 *  - Kazuho Oku, Tokuhiro Matsuno, Daisuke Murase, Shigeo Mitsunari for picohttpparser
 */
 
+#include <iostream>
 #include <xtl.h>
 
 #include "XHTTPS.h"
@@ -19,7 +20,6 @@
 /*
  * TODO:
  * 
- * - c++ify, replace mallocs with new
  * - document all functions
  * - POST requests
  * - dynamically add headers in
@@ -32,7 +32,7 @@ static char* UserAgent;
 void XHTTPS_Debug(char* text)
 {
 #ifdef XHTTPS_DEBUG
-	printf("XHTTPS_DEBUG: %s", text);
+	std::cout << "[XHTTPS_DEBUG]: " << text;
 #endif
 }
 
@@ -109,6 +109,8 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 {
 	size_t readOffset = 0;
 	size_t writeOffset = 0;
+
+	// using malloc() because we will need to realloc later
 	char *dechunked = (char *)malloc(messageLen);
 	if (!dechunked) return NULL;
 
@@ -120,7 +122,7 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 			return NULL;
 		}
 
-		printf("CHUNK: Size 0x%x\n", chunkSize);
+		std::cout << "CHUNK: Size 0x" << std::hex << chunkSize << "\n";
 
 		if (chunkSize == 0)
 			break; // end of chunks
@@ -159,17 +161,18 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	int r;
 	int bufLen = 0; // input variable for for loop
 	XHTTPS_Error err;
-	XHTTPS_Response* resp = (XHTTPS_Response*)malloc(sizeof(XHTTPS_Response));
+	XHTTPS_Response* resp = new XHTTPS_Response;
 
 	if (!resp)
 		return nullptr;
 
 	resp->engine_err = XHTTPS_OK;
 	resp->msg_len = XHTTPS_OUTPUT_BUFFER_SIZE;
-	resp->msg = (char*)malloc(resp->msg_len);
+	resp->msg = new char[resp->msg_len];
 
 	if (!resp->msg)
 	{
+		delete resp->msg;
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_MESSAGE_MALLOC_FAILED);
 	}
 
@@ -177,12 +180,14 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
 	if(err != XHTTPS_OK)
 	{
+		delete resp->msg;
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_FAILED_DNS_RESOLUTION);
 	}
 
 	// Connect to host
 	if (!XboxTLS_Connect(int_ctx, ip, host, 443)) 
 	{
+		delete resp->msg;
 		XboxTLS_Free(int_ctx);
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_CONNECT_TO_HOST_FAILED);
 	}
@@ -212,6 +217,7 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
 	else
 	{
+		delete resp->msg;
 		XHTTPS_RETURN_ENGINE_ERROR(XHTTPS_INVALID_HTTP_RESPONSE);
 	}
 
