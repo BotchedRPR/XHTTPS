@@ -311,10 +311,11 @@ XHTTPS_Context* XHTTPS_Setup(void)
 
 void XHTTPS_Exit(XHTTPS_Context* ctx)
 {
-	if(ctx->int_ctx != nullptr)
+	if(ctx->int_ctx != nullptr || !ctx)
 		XboxTLS_Free(ctx->int_ctx);
 
 	delete[] ctx->UserAgent;
+	delete ctx;
 
 	WSACleanup();
 }
