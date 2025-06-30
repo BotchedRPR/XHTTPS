@@ -405,9 +405,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# XboxTLS - external library (submodule?)
-XboxTLS/
-
 # Xbox 360 SDK - build outputs
 *.xex
 *.exe

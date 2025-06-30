@@ -39,7 +39,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
-    <IncludePath>$(MSBuildProjectDirectory)\..\XboxTLS;$(MSBuildProjectDirectory)\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory)\..\External\XboxTLS;$(MSBuildProjectDirectory)\..\External\picohttpparser;$(MSBuildProjectDirectory)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <ClCompile>
@@ -84,24 +84,19 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\XboxTLS\XboxTLS.vcxproj">
-      <Project>{8b766fb7-fb91-4b48-88f0-0abeda014dd5}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\picohttpparser.h" />
+    <ClInclude Include="..\External\picohttpparser\picohttpparser.h" />
     <ClInclude Include="include\XHTTPS.h" />
     <ClInclude Include="include\XHTTPS_Roots.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\picohttpparser.c" />
+    <ClCompile Include="..\External\picohttpparser\picohttpparser.c" />
     <ClCompile Include="src\XHTTPS.cpp" />
     <ClCompile Include="src\XHTTPS_Roots.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\External\XboxTLS\XboxTLS2.vcxproj">
+      <Project>{8b766fb7-fb91-4b48-88f0-0abeda014dd5}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

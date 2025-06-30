@@ -2,8 +2,9 @@
 
 #include <stdio.h>
 
-#include "..\..\XboxTLS\XboxTLS.h"
-#include "picohttpparser.h"
+// TODO: Why does this not get found by VC++ directories?
+#include "..\..\External\XboxTLS\XboxTLS.h"
+#include "..\..\External\picohttpparser\picohttpparser.h"
 
 // Defines for library end users
 #define XHTTPS_DEBUG

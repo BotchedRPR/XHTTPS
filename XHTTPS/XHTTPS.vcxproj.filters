@@ -14,24 +14,24 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\picohttpparser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\XHTTPS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\XHTTPS_Roots.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\picohttpparser\picohttpparser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\picohttpparser.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\XHTTPS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\XHTTPS_Roots.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\picohttpparser\picohttpparser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

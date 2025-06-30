@@ -1,0 +1,6 @@
+[submodule "External/picohttpparser"]
+	path = External/picohttpparser
+	url = https://github.com/h2o/picohttpparser
+[submodule "External/XboxTLS"]
+	path = External/XboxTLS
+	url = https://github.com/BotchedRPR/XboxTLS

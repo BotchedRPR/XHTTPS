@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XHTTPS", "XHTTPS\XHTTPS.vcxproj", "{4DFC58A6-5D6D-4BD9-8882-FA0B0C5E9B4C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XboxTLS", "XboxTLS\XboxTLS.vcxproj", "{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XHTTPS_Demo", "XHTTPS_Demo\XHTTPS_Demo.vcxproj", "{C58111D8-57EE-4ECC-A20C-D6EB34001551}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XboxTLS", "External\XboxTLS\XboxTLS2.vcxproj", "{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,15 +17,17 @@ Global
 		{4DFC58A6-5D6D-4BD9-8882-FA0B0C5E9B4C}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
 		{4DFC58A6-5D6D-4BD9-8882-FA0B0C5E9B4C}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{4DFC58A6-5D6D-4BD9-8882-FA0B0C5E9B4C}.Release|Xbox 360.Build.0 = Release|Xbox 360
-		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Debug|Xbox 360.ActiveCfg = Release|Xbox 360
-		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Debug|Xbox 360.Build.0 = Release|Xbox 360
-		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
-		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Release|Xbox 360.Build.0 = Release|Xbox 360
 		{C58111D8-57EE-4ECC-A20C-D6EB34001551}.Debug|Xbox 360.ActiveCfg = Debug|Xbox 360
 		{C58111D8-57EE-4ECC-A20C-D6EB34001551}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
 		{C58111D8-57EE-4ECC-A20C-D6EB34001551}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{C58111D8-57EE-4ECC-A20C-D6EB34001551}.Release|Xbox 360.Build.0 = Release|Xbox 360
 		{C58111D8-57EE-4ECC-A20C-D6EB34001551}.Release|Xbox 360.Deploy.0 = Release|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Debug|Xbox 360.ActiveCfg = Debug|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Debug|Xbox 360.Deploy.0 = Debug|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Release|Xbox 360.Build.0 = Release|Xbox 360
+		{8B766FB7-FB91-4B48-88F0-0ABEDA014DD5}.Release|Xbox 360.Deploy.0 = Release|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
