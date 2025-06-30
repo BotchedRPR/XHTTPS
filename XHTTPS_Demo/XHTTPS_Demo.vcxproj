@@ -88,6 +88,9 @@
     <Deploy>
       <DeploymentType>CopyToHardDrive</DeploymentType>
     </Deploy>
+    <ImageXex>
+      <ConfigurationFile>$(MSBuildProjectDirectory)\XexConfig.xml</ConfigurationFile>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Demo.cpp" />
