@@ -28,6 +28,12 @@ enum XHTTPS_Error {
 	XHTTPS_OUT_OF_MEMORY
 };
 
+typedef struct XHTTPS_Context {
+	XboxTLSContext* int_ctx;
+	XHTTPS_Error engine_err;
+	char* UserAgent;
+} XHTTPS_Context;
+
 typedef struct XHTTPS_Response {
 	int minor_version;
 	int status;
@@ -41,12 +47,10 @@ typedef struct XHTTPS_Response {
 	// overrun by the parser.
 	size_t num_headers;
 	struct phr_header headers[100];
-
-	XHTTPS_Error engine_err;
 } XHTTPS_Response;
 
 void XHTTPS_Debug(char* text);
-XHTTPS_Error XHTTPS_Setup(void);
-XHTTPS_Response* XHTTPS_GET(char* host, char* path);
-void XHTTPS_SetUserAgent(char* userAgent);
-void XHTTPS_Exit(void);
+XHTTPS_Context* XHTTPS_Setup(void);
+XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path);
+void XHTTPS_SetUserAgent(XHTTPS_Context* ctx, char* targetUserAgent);
+void XHTTPS_Exit(XHTTPS_Context* ctx);

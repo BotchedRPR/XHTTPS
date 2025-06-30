@@ -9,23 +9,22 @@
 
 void _cdecl main()
 {
-	int ret_xhttps;
-	char* output = (char*)malloc(XHTTPS_OUTPUT_BUFFER_SIZE);
+	XHTTPS_Context *ctx;
 	XHTTPS_Response *resp;
 
-	ret_xhttps = XHTTPS_Setup();
+	ctx = XHTTPS_Setup();
 
 	// This is optional
-	XHTTPS_SetUserAgent("Xenon/2.0.17559.0");
+	XHTTPS_SetUserAgent(ctx, "Xenon/2.0.17559.0");
 
-	resp = XHTTPS_GET("consolemods.org", "/wiki/Main_Page");
+	resp = XHTTPS_GET(ctx, "consolemods.org", "/wiki/Main_Page");
 
 	if (!resp)
 		goto out;
 
-	if (resp->engine_err != XHTTPS_OK)
+	if (ctx->engine_err != XHTTPS_OK)
 	{
-		std::cout << "XHTTPS Engine error " << resp->engine_err << "\n";
+		std::cout << "XHTTPS Engine error " << ctx->engine_err << "\n";
 		free(resp);
 		goto out;
 	}
@@ -38,6 +37,6 @@ void _cdecl main()
 	}
 
 out:
-	XHTTPS_Exit();
+	XHTTPS_Exit(ctx);
 	return;
 }

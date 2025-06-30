@@ -26,10 +26,6 @@
  * - dynamically add headers in
  */
 
-// For simplicity's sake we declare an internal context instead of passing it around
-XboxTLSContext* int_ctx;
-static char* UserAgent;
-
 void XHTTPS_Debug(char* text)
 {
 #ifdef XHTTPS_DEBUG
@@ -42,8 +38,14 @@ static inline XHTTPS_Response* XHTTPS_MakeError(XHTTPS_Error err)
     XHTTPS_Response* r = new XHTTPS_Response;
     r->msg = nullptr;
     r->body = nullptr;
-    r->engine_err = err;
     return r;
+}
+
+static inline XHTTPS_Context* XHTTPS_MakeContextError(XHTTPS_Context* ctx,
+						      XHTTPS_Error err)
+{
+	ctx->engine_err = err;
+	return ctx;
 }
 
 /**
@@ -142,7 +144,7 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	return dechunked;
 }
 
-XHTTPS_Response* XHTTPS_GET(char* host, char* path)
+XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 {
 	char ip[64] = { 0 };
 	char request[512];
@@ -155,7 +157,6 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	if (!resp)
 		return nullptr;
 
-	resp->engine_err = XHTTPS_OK;
 	resp->msg_len = XHTTPS_OUTPUT_BUFFER_SIZE;
 	resp->msg = (char*)malloc(resp->msg_len);
 
@@ -171,10 +172,10 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	}
 
 	// Connect to host
-	if (!XboxTLS_Connect(int_ctx, ip, host, 443)) 
+	if (!XboxTLS_Connect(ctx->int_ctx, ip, host, 443)) 
 	{
 		free(resp->msg);
-		XboxTLS_Free(int_ctx);
+		XboxTLS_Free(ctx->int_ctx);
 		return XHTTPS_MakeError(XHTTPS_CONNECT_TO_HOST_FAILED);
 	}
 
@@ -185,12 +186,12 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 		"Host: %s\r\n"
 		"User-Agent: %s\r\n"
 		"Accept: */*\r\n"
-		"Connection: close\r\n\r\n", path, host, UserAgent);
-	XboxTLS_Write(int_ctx, request, (int)strlen(request));
+		"Connection: close\r\n\r\n", path, host, ctx->UserAgent);
+	XboxTLS_Write(ctx->int_ctx, request, (int)strlen(request));
 
 	// Read the response from the socket
 	// Here we need to be careful and realloc the buffer every XHTTPS_OUTPUT_BUFFER_SIZE bytes read
-	while ((r = XboxTLS_Read(int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
+	while ((r = XboxTLS_Read(ctx->int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
 		bufLen += r;
 		
 		// Check capacity of the output buffer
@@ -252,13 +253,23 @@ XHTTPS_Response* XHTTPS_GET(char* host, char* path)
 	return resp;
 }
 
-void XHTTPS_SetUserAgent(char* userAgent)
+void XHTTPS_SetUserAgent(XHTTPS_Context* ctx, char* targetUserAgent)
 {
-	memcpy_s(UserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE, userAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE);
+	if (!ctx->UserAgent || !targetUserAgent)
+		return;
+
+	memcpy_s(ctx->UserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE, targetUserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE);
 }
 
-XHTTPS_Error XHTTPS_Setup(void)
+XHTTPS_Context* XHTTPS_Setup(void)
 {
+	// First of all let's allocate the context pointer
+	XHTTPS_Context* ctx = new XHTTPS_Context;
+
+	if (!ctx)
+		return nullptr;
+
+	// Now startup XNET and WSA
 	XNetStartupParams xnsp = { 0 };
 	WSADATA wsadata;
 
@@ -266,44 +277,44 @@ XHTTPS_Error XHTTPS_Setup(void)
 	xnsp.cfgFlags = XNET_STARTUP_BYPASS_SECURITY;
 
 	if (XNetStartup(&xnsp) != 0)
-		return XHTTPS_XNET_STARTUP_FAILED;
+		return XHTTPS_MakeContextError(ctx, XHTTPS_XNET_STARTUP_FAILED);
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
-		return XHTTPS_WSA_STARTUP_FAILED;
+		return XHTTPS_MakeContextError(ctx, XHTTPS_WSA_STARTUP_FAILED);
 
 	// XboxTLS Recommends this
 	Sleep(3000);
 
-	int_ctx = (XboxTLSContext*)malloc(sizeof(XboxTLSContext));
+	ctx->int_ctx = new XboxTLSContext;
 
-	if (int_ctx == NULL)
-		return XHTTPS_CONTEXT_CREATION_FAILED;
+	if (ctx->int_ctx == NULL)
+		return XHTTPS_MakeContextError(ctx, XHTTPS_CONTEXT_CREATION_FAILED);
 
-	UserAgent = new char[XHTTPS_USER_AGENT_SIZE];
+	ctx->UserAgent = new char[XHTTPS_USER_AGENT_SIZE];
 
-	if (UserAgent == NULL)
-		return XHTTPS_USER_AGENT_MALLOC_FAILED;
+	if (ctx->UserAgent == NULL)
+		return XHTTPS_MakeContextError(ctx, XHTTPS_USER_AGENT_MALLOC_FAILED);
 
 	// Default UserAgent, can be replaced with XHTTPS_SetUserAgent
-	strncpy(UserAgent, "Xbox360/1.0", XHTTPS_USER_AGENT_SIZE);
+	strncpy(ctx->UserAgent, "Xbox360/1.0", XHTTPS_USER_AGENT_SIZE * sizeof(char));
 
-	if (!XboxTLS_CreateContext(int_ctx, "dummy"))
-		return XHTTPS_CONTEXT_CREATION_FAILED;
+	if (!XboxTLS_CreateContext(ctx->int_ctx, "dummy"))
+		return XHTTPS_MakeContextError(ctx, XHTTPS_CONTEXT_CREATION_FAILED);
 
 	// Add some common root CAs. Don't fail on error.
-	XHTTPS_AddTAs(int_ctx);
+	XHTTPS_AddTAs(ctx->int_ctx);
 
 	XHTTPS_Debug("XHTTPS ready.\n");
 
-	return XHTTPS_OK;
+	return ctx;
 }
 
-void XHTTPS_Exit(void)
+void XHTTPS_Exit(XHTTPS_Context* ctx)
 {
-	if(int_ctx != nullptr)
-		XboxTLS_Free(int_ctx);
+	if(ctx->int_ctx != nullptr)
+		XboxTLS_Free(ctx->int_ctx);
 
-	delete[] UserAgent;
+	delete[] ctx->UserAgent;
 
 	WSACleanup();
 }
