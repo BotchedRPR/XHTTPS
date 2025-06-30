@@ -30,11 +30,14 @@ void _cdecl main()
 		goto out;
 	}
 
-	for (int i = 0; i != resp->num_headers; ++i) {
-		std::cout << std::string(resp->headers[i].name, resp->headers[i].name_len)
-			<< ": "
-			<< std::string(resp->headers[i].value, resp->headers[i].value_len)
-			<< '\n';
+	for (int i = 0; i != resp->num_headers; ++i)
+	{
+		std::cout << std::string(resp->headers[i].name,
+					 resp->headers[i].name_len)
+			  << ": "
+			  << std::string(resp->headers[i].value,
+					 resp->headers[i].value_len)
+			  << '\n';
 	}
 
 out:
