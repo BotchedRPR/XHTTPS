@@ -5,7 +5,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
-#include "..\XHTTPS\XHTTPS.h"
+
+#include "XHTTPS.h"
 
 void _cdecl main()
 {

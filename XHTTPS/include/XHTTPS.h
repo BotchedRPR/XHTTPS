@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "..\XboxTLS\XboxTLS.h"
+#include "..\..\XboxTLS\XboxTLS.h"
 #include "picohttpparser.h"
 
 // Defines for library end users
