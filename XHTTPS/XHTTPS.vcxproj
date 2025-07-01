@@ -35,14 +35,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
-    <IncludePath>$(MSBuildProjectDirectory)\..\XboxTLS;$(MSBuildProjectDirectory)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
-    <IncludePath>$(MSBuildProjectDirectory)\..\External\XboxTLS;$(MSBuildProjectDirectory)\..\External\picohttpparser;$(MSBuildProjectDirectory)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)External\XboxTLS;$(SolutionDir)External\picohttpparser;$(ProjectDir)include</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -62,6 +61,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)External\XboxTLS;$(SolutionDir)External\picohttpparser;$(ProjectDir)include</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Full</Optimization>
