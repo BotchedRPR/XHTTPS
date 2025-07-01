@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\External\picohttpparser\picohttpparser.h" />
+    <ClInclude Include="include\snprintf.h" />
     <ClInclude Include="include\XHTTPS.h" />
     <ClInclude Include="include\XHTTPS_Roots.h" />
   </ItemGroup>
