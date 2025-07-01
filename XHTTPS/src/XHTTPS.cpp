@@ -212,9 +212,27 @@ XHTTPS_Error XHTTPS_Parse_HTTP_Response(XHTTPS_Context* ctx, XHTTPS_Response* re
 	return XHTTPS_OK;
 }
 
-XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
+XHTTPS_Error XHTTPS_Connect(XHTTPS_Context* ctx, char* host)
 {
 	char ip[64] = { 0 };
+	XHTTPS_Error err;
+
+	// Resolve DNS
+	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
+	if(err != XHTTPS_OK)
+		return XHTTPS_FAILED_DNS_RESOLUTION;
+
+	// Connect to host
+	if (!XboxTLS_Connect(ctx->int_ctx, ip, host, 443)) 
+		return XHTTPS_CONNECT_TO_HOST_FAILED;
+
+	XHTTPS_Debug("Connected to host!\n");
+
+	return XHTTPS_OK;
+}
+
+XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
+{
 	char request[512];
 	char *newBuf;
 	int r;
@@ -231,23 +249,12 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 	if (!resp->msg)
 		return XHTTPS_MakeError(XHTTPS_MESSAGE_MALLOC_FAILED);
 
-	// Resolve DNS
-	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
-	if(err != XHTTPS_OK)
+	err = XHTTPS_Connect(ctx, host);
+	if (err != XHTTPS_OK)
 	{
 		free(resp->msg);
-		return XHTTPS_MakeError(XHTTPS_FAILED_DNS_RESOLUTION);
+		return XHTTPS_MakeError(err);
 	}
-
-	// Connect to host
-	if (!XboxTLS_Connect(ctx->int_ctx, ip, host, 443)) 
-	{
-		free(resp->msg);
-		XboxTLS_Free(ctx->int_ctx);
-		return XHTTPS_MakeError(XHTTPS_CONNECT_TO_HOST_FAILED);
-	}
-
-	XHTTPS_Debug("Connected to host!\n");
 
 	sprintf(request,
 		"GET %s HTTP/1.1\r\n"
