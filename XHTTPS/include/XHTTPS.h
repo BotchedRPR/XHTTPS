@@ -14,6 +14,8 @@
 // Autodetects whitespaces at the beginning of the HTTP stream
 #define XHTTPS_WHITESPACE_AUTODETECT 1
 
+#define XHTTPS_IF_IN_BETWEEN(obj, s, e)	if (obj >= s && obj <= e)
+
 enum XHTTPS_Error {
 	XHTTPS_OK = 0,
 	XHTTPS_XNET_STARTUP_FAILED,

@@ -144,11 +144,79 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	return dechunked;
 }
 
+XHTTPS_Error XHTTPS_Parse_HTTP_Response(XHTTPS_Context* ctx, XHTTPS_Response* resp)
+{
+	int r = 0;
+	char *dechunked;
+
+	// See comment in XHTTPS.h about header numbers
+	resp->num_headers = 100;
+
+	r = phr_parse_response(resp->msg, resp->msg_len, &resp->minor_version, &resp->status, (const char**)&resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
+
+	if (r > 0)
+		XHTTPS_Debug("Finished parsing HTTP headers.\n");
+	else
+		return XHTTPS_INVALID_HTTP_RESPONSE;
+
+	// Let's check the HTTP status code so that we don't waste our time.
+	// On success check if we're chunked and if we're downloading a file.
+	// On redirect - redirect.
+	// On failure - pass to user and get out.
+	XHTTPS_IF_IN_BETWEEN(resp->status, 200, 226)
+	{
+		// success - do nothing... boo
+	}
+	else XHTTPS_IF_IN_BETWEEN(resp->status, 300, 308)
+	{
+		XHTTPS_Debug("STUB: Need to redirect!\n");
+		return XHTTPS_OK;
+	}
+	else
+	{
+		// handle everything else as errors
+		return XHTTPS_INVALID_HTTP_RESPONSE;
+	}
+
+	/*
+	 * Now we need to check Transfer-Encoding. Mainly because
+	 * we will most likely receive chunked responses and will
+	 * need to check if what we got is correct with the chunk
+	 * sizes. TODO: Maybe will be more efficient to do it while
+	 * reading from the socket?
+	 */
+	for (size_t i = 0; i < resp->num_headers; i++)
+	{
+		if (strncmp(resp->headers[i].name, "Transfer-Encoding", resp->headers[i].name_len) == 0)
+		{
+			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
+			{
+				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
+
+				size_t msgOffset = XHTTPS_Get_Message_Offset(resp->msg);
+
+				resp->body = resp->msg + msgOffset;
+
+				// We can't trust msg_len to not overrun
+				dechunked = XHTTPS_Dechunk(resp->body, strlen(resp->body));
+				if (dechunked == NULL)
+					return XHTTPS_INVALID_HTTP_RESPONSE;
+
+				break;
+			}
+			else
+				break;
+		}
+	}
+
+	return XHTTPS_OK;
+}
+
 XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 {
 	char ip[64] = { 0 };
 	char request[512];
-	char *newBuf, *dechunked;
+	char *newBuf;
 	int r;
 	int bufLen = 0; // input variable for for loop
 	XHTTPS_Error err;
@@ -207,47 +275,11 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 		}
 	}
 
-	// See comment in XHTTPS.h about header numbers
-	resp->num_headers = 100;
-
-	r = phr_parse_response(resp->msg, resp->msg_len, &resp->minor_version, &resp->status, (const char**)&resp->msg, &resp->msg_len, resp->headers, &resp->num_headers, 0);
-
-	if (r > 0)
-		XHTTPS_Debug("Finished parsing HTTP headers.\n");
-	else
-		return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
-
-	/*
-	 * Now we need to check Transfer-Encoding. Mainly because
-	 * we will most likely receive chunked responses and will
-	 * need to check if what we got is correct with the chunk
-	 * sizes. TODO: Maybe will be more efficient to do it while
-	 * reading from the socket?
-	 */
-	for (size_t i = 0; i < resp->num_headers; i++)
+	r = XHTTPS_Parse_HTTP_Response(ctx, resp);
+	if (r != 0)
 	{
-		if (strncmp(resp->headers[i].name, "Transfer-Encoding", resp->headers[i].name_len) == 0)
-		{
-			if (strncmp(resp->headers[i].value, "chunked", resp->headers[i].value_len) == 0)
-			{
-				XHTTPS_Debug("Found chunked HTTP transfer encoding. Dechunking.\n");
-
-				size_t msgOffset = XHTTPS_Get_Message_Offset(resp->msg);
-
-				resp->body = resp->msg + msgOffset;
-
-				// We can't trust msg_len to not overrun
-				dechunked = XHTTPS_Dechunk(resp->body, strlen(resp->body));
-				if (dechunked == NULL)
-				{
-					return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
-				}
-
-				break;
-			}
-			else
-				break;
-		}
+		XHTTPS_Exit(ctx);
+		return XHTTPS_MakeError((XHTTPS_Error)r);
 	}
 
 	return resp;
