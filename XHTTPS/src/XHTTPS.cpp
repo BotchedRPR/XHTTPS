@@ -356,8 +356,6 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 		return XHTTPS_MakeError(err);
 	}
 
-	std::cout << request;
-
 	XboxTLS_Write(ctx->int_ctx, request, (int)strlen(request));
 
 	// Read the response from the socket
