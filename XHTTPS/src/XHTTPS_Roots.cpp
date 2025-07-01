@@ -864,6 +864,4 @@ void XHTTPS_AddTAs(XboxTLSContext* ctx)
 		(const unsigned char*)TA141_DN, sizeof TA141_DN,
 		(const unsigned char*)TA141_RSA_N, sizeof TA141_RSA_N,
 		(const unsigned char*)TA141_RSA_E, sizeof TA141_RSA_E);
-
-	XHTTPS_Debug("Added some Root Certs\n");
 }
