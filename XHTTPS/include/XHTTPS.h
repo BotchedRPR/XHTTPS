@@ -10,15 +10,17 @@
 
 // Sizes, constants, etc.
 #define XHTTPS_MAX_ADDITIONAL_HEADERS 16
-#define XHTTPS_IO_BUFFER_SIZE ((8 * 1024) + XHTTPS_MAX_ADDITIONAL_HEADERS * sizeof(XHTTPS_Header))
+#define XHTTPS_IO_BUFFER_SIZE \
+	((8 * 1024) + XHTTPS_MAX_ADDITIONAL_HEADERS * sizeof(XHTTPS_Header))
 #define XHTTPS_USER_AGENT_SIZE 32
 
 // Autodetects whitespaces at the beginning of the HTTP stream
 #define XHTTPS_WHITESPACE_AUTODETECT 1
 
-#define XHTTPS_IF_IN_BETWEEN(obj, s, e)	if (obj >= s && obj <= e)
+#define XHTTPS_IF_IN_BETWEEN(obj, s, e) if (obj >= s && obj <= e)
 
-enum XHTTPS_Error {
+enum XHTTPS_Error
+{
 	XHTTPS_OK = 0,
 	XHTTPS_XNET_STARTUP_FAILED,
 	XHTTPS_WSA_STARTUP_FAILED,
@@ -37,17 +39,20 @@ enum XHTTPS_Error {
 	XHTTPS_OUT_OF_MEMORY,
 };
 
-typedef struct XHTTPS_Header {
+typedef struct XHTTPS_Header
+{
 	char* name;
 	char* value;
 } XHTTPS_Header;
 
-enum XHTTPS_Request_Type {
+enum XHTTPS_Request_Type
+{
 	GET = 0,
 	POST,
 };
 
-typedef struct XHTTPS_Context {
+typedef struct XHTTPS_Context
+{
 	XboxTLSContext* int_ctx;
 	XHTTPS_Error engine_err;
 	char* UserAgent;
@@ -56,7 +61,8 @@ typedef struct XHTTPS_Context {
 	size_t num_headers;
 } XHTTPS_Context;
 
-typedef struct XHTTPS_Response {
+typedef struct XHTTPS_Response
+{
 	int minor_version;
 	int status;
 	char* msg;
