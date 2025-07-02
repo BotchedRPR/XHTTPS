@@ -14,6 +14,7 @@
 #include <iostream>
 #include <xtl.h>
 
+#include "snprintf.h"
 #include "XboxTLS.h"
 #include "XHTTPS.h"
 #include "XHTTPS_Roots.h"
@@ -144,68 +145,10 @@ char* XHTTPS_Dechunk(char *message, size_t messageLen)
 	return dechunked;
 }
 
-XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
+XHTTPS_Error XHTTPS_Parse_HTTP_Response(XHTTPS_Context* ctx, XHTTPS_Response* resp)
 {
-	char ip[64] = { 0 };
-	char request[512];
-	char *newBuf, *dechunked;
-	int r;
-	int bufLen = 0; // input variable for for loop
-	XHTTPS_Error err;
-	XHTTPS_Response* resp = new XHTTPS_Response;
-
-	if (!resp)
-		return nullptr;
-
-	resp->msg_len = XHTTPS_OUTPUT_BUFFER_SIZE;
-	resp->msg = (char*)malloc(resp->msg_len);
-
-	if (!resp->msg)
-		return XHTTPS_MakeError(XHTTPS_MESSAGE_MALLOC_FAILED);
-
-	// Resolve DNS
-	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
-	if(err != XHTTPS_OK)
-	{
-		free(resp->msg);
-		return XHTTPS_MakeError(XHTTPS_FAILED_DNS_RESOLUTION);
-	}
-
-	// Connect to host
-	if (!XboxTLS_Connect(ctx->int_ctx, ip, host, 443)) 
-	{
-		free(resp->msg);
-		XboxTLS_Free(ctx->int_ctx);
-		return XHTTPS_MakeError(XHTTPS_CONNECT_TO_HOST_FAILED);
-	}
-
-	XHTTPS_Debug("Connected to host!\n");
-
-	sprintf(request,
-		"GET %s HTTP/1.1\r\n"
-		"Host: %s\r\n"
-		"User-Agent: %s\r\n"
-		"Accept: */*\r\n"
-		"Connection: close\r\n\r\n", path, host, ctx->UserAgent);
-	XboxTLS_Write(ctx->int_ctx, request, (int)strlen(request));
-
-	// Read the response from the socket
-	// Here we need to be careful and realloc the buffer every XHTTPS_OUTPUT_BUFFER_SIZE bytes read
-	while ((r = XboxTLS_Read(ctx->int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
-		bufLen += r;
-		
-		// Check capacity of the output buffer
-		if (resp->msg_len - bufLen <= 1)
-		{
-			resp->msg_len += XHTTPS_OUTPUT_BUFFER_SIZE;
-			newBuf = (char*)realloc(resp->msg, resp->msg_len);
-
-			if (!newBuf)
-				return XHTTPS_MakeError(XHTTPS_OUT_OF_MEMORY);
-
-			resp->msg = newBuf;
-		}
-	}
+	int r = 0;
+	char *dechunked;
 
 	// See comment in XHTTPS.h about header numbers
 	resp->num_headers = 100;
@@ -215,7 +158,26 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 	if (r > 0)
 		XHTTPS_Debug("Finished parsing HTTP headers.\n");
 	else
-		return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
+		return XHTTPS_INVALID_HTTP_RESPONSE;
+
+	// Let's check the HTTP status code so that we don't waste our time.
+	// On success check if we're chunked and if we're downloading a file.
+	// On redirect - redirect.
+	// On failure - pass to user and get out.
+	XHTTPS_IF_IN_BETWEEN(resp->status, 200, 226)
+	{
+		// success - do nothing... boo
+	}
+	else XHTTPS_IF_IN_BETWEEN(resp->status, 300, 308)
+	{
+		XHTTPS_Debug("STUB: Need to redirect!\n");
+		return XHTTPS_OK;
+	}
+	else
+	{
+		// handle everything else as errors
+		return XHTTPS_INVALID_HTTP_RESPONSE;
+	}
 
 	/*
 	 * Now we need to check Transfer-Encoding. Mainly because
@@ -239,9 +201,7 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 				// We can't trust msg_len to not overrun
 				dechunked = XHTTPS_Dechunk(resp->body, strlen(resp->body));
 				if (dechunked == NULL)
-				{
-					return XHTTPS_MakeError(XHTTPS_INVALID_HTTP_RESPONSE);
-				}
+					return XHTTPS_INVALID_HTTP_RESPONSE;
 
 				break;
 			}
@@ -250,16 +210,71 @@ XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
 		}
 	}
 
-	return resp;
+	return XHTTPS_OK;
 }
 
-void XHTTPS_SetUserAgent(XHTTPS_Context* ctx, char* targetUserAgent)
+XHTTPS_Error XHTTPS_Connect(XHTTPS_Context* ctx, char* host)
 {
-	if (!ctx->UserAgent || !targetUserAgent)
-		return;
+	char ip[64] = { 0 };
+	XHTTPS_Error err;
 
-	memcpy_s(ctx->UserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE, targetUserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE);
+	// Resolve DNS
+	err = XHTTPS_ResolveDNS(host, ip, sizeof(ip));
+	if(err != XHTTPS_OK)
+		return XHTTPS_FAILED_DNS_RESOLUTION;
+
+	// Connect to host
+	if (!XboxTLS_Connect(ctx->int_ctx, ip, host, 443)) 
+		return XHTTPS_CONNECT_TO_HOST_FAILED;
+
+	XHTTPS_Debug("Connected to host!\n");
+
+	return XHTTPS_OK;
 }
+
+XHTTPS_Error XHTTPS_Make_Request(XHTTPS_Context* ctx, char* request, char* host,
+				 char* path, XHTTPS_Request_Type type,
+				 XHTTPS_Header *headers, size_t num_headers)
+{
+	int offset = 0;
+
+	if (type != GET)
+	{
+		std::cout << "STUB: Only GET requests are supported.\n";
+		return XHTTPS_INVALID_REQUEST;
+	}
+
+	offset += snprintf(request, XHTTPS_IO_BUFFER_SIZE,
+			   "GET %s HTTP/1.1\r\n"
+			   "Host: %s\r\n"
+			   "User-Agent: %s\r\n"
+			   "Accept: */*\r\n"
+			   "Connection: close\r\n", 
+			   path, host, ctx->UserAgent);
+
+	// We don't need to add additional headers if there are none
+	if (!headers || num_headers == 0)
+		goto end_request;
+
+	for (size_t i = 0; i < num_headers; i++)
+	{
+		offset += snprintf(request + offset, XHTTPS_IO_BUFFER_SIZE - offset,
+				   "%s: %s\r\n", headers[i].name, headers[i].value);
+
+		if (offset >= XHTTPS_IO_BUFFER_SIZE) 
+			return XHTTPS_TOO_MANY_HEADERS;
+	}
+
+end_request:
+	if (offset + 2 >= XHTTPS_IO_BUFFER_SIZE)  // check for overrunning with the final \r\n
+		return XHTTPS_TOO_MANY_HEADERS;
+
+	offset += snprintf(request + offset, XHTTPS_IO_BUFFER_SIZE - offset, "\r\n");
+
+	return XHTTPS_OK;
+}
+
+// ---------- Public API (TODO: Document)
 
 XHTTPS_Context* XHTTPS_Setup(void)
 {
@@ -307,6 +322,97 @@ XHTTPS_Context* XHTTPS_Setup(void)
 	XHTTPS_Debug("XHTTPS ready.\n");
 
 	return ctx;
+}
+
+XHTTPS_Response* XHTTPS_GET(XHTTPS_Context* ctx, char* host, char* path)
+{
+	char request[XHTTPS_IO_BUFFER_SIZE];
+	char *newBuf;
+	int r;
+	int bufLen = 0; // input variable for for loop
+	XHTTPS_Error err;
+	XHTTPS_Response* resp = new XHTTPS_Response;
+
+	if (!resp)
+		return nullptr;
+
+	resp->msg_len = XHTTPS_IO_BUFFER_SIZE;
+	resp->msg = (char*)malloc(resp->msg_len);
+
+	if (!resp->msg)
+		return XHTTPS_MakeError(XHTTPS_MESSAGE_MALLOC_FAILED);
+
+	err = XHTTPS_Connect(ctx, host);
+	if (err != XHTTPS_OK)
+	{
+		free(resp->msg);
+		return XHTTPS_MakeError(err);
+	}
+	
+	err = XHTTPS_Make_Request(ctx, request, host, path, GET, ctx->headers, ctx->num_headers);
+	if (err != XHTTPS_OK)
+	{
+		free(resp->msg);
+		return XHTTPS_MakeError(err);
+	}
+
+	XboxTLS_Write(ctx->int_ctx, request, (int)strlen(request));
+
+	// Read the response from the socket
+	// Here we need to be careful and realloc the buffer every XHTTPS_IO_BUFFER_SIZE bytes read
+	while ((r = XboxTLS_Read(ctx->int_ctx, resp->msg + bufLen, resp->msg_len - bufLen - 1)) > 0) {
+		bufLen += r;
+		
+		// Check capacity of the output buffer
+		if (resp->msg_len - bufLen <= 1)
+		{
+			resp->msg_len += XHTTPS_IO_BUFFER_SIZE;
+			newBuf = (char*)realloc(resp->msg, resp->msg_len);
+
+			if (!newBuf)
+				return XHTTPS_MakeError(XHTTPS_OUT_OF_MEMORY);
+
+			resp->msg = newBuf;
+		}
+	}
+
+	r = XHTTPS_Parse_HTTP_Response(ctx, resp);
+	if (r != 0)
+	{
+		XHTTPS_Exit(ctx);
+		return XHTTPS_MakeError((XHTTPS_Error)r);
+	}
+
+	return resp;
+}
+
+XHTTPS_Error XHTTPS_AddHeader(XHTTPS_Context* ctx, XHTTPS_Header header)
+{
+	if (ctx->num_headers == XHTTPS_MAX_ADDITIONAL_HEADERS)
+		return XHTTPS_TOO_MANY_HEADERS;
+
+	ctx->headers[ctx->num_headers] = header;
+	ctx->num_headers++;
+
+	return XHTTPS_OK;
+}
+
+XHTTPS_Error XHTTPS_RemoveHeader(XHTTPS_Context* ctx)
+{
+	if (ctx->num_headers == 0)
+		return XHTTPS_TOO_LITTLE_HEADERS;
+
+	ctx->num_headers--;
+
+	return XHTTPS_OK;
+}
+
+void XHTTPS_SetUserAgent(XHTTPS_Context* ctx, char* targetUserAgent)
+{
+	if (!ctx->UserAgent || !targetUserAgent)
+		return;
+
+	memcpy_s(ctx->UserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE, targetUserAgent, sizeof(char) * XHTTPS_USER_AGENT_SIZE);
 }
 
 void XHTTPS_Exit(XHTTPS_Context* ctx)
