@@ -10,8 +10,8 @@
 
 void _cdecl main()
 {
-	XHTTPS_Context *ctx;
-	XHTTPS_Response *resp;
+	XHTTPS_Context* ctx;
+	XHTTPS_Response* resp;
 
 	ctx = XHTTPS_Setup();
 
